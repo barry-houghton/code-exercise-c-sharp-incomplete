@@ -5,22 +5,17 @@ using UrlShortener.Api.Services;
 namespace UrlShortener.Api.Controllers;
 
 [ApiController]
-public class UrlsController : ControllerBase
+public class UrlsController(IUrlShortenerService service, ILogger<UrlsController> logger) : ControllerBase
 {
-    private readonly IUrlShortenerService _service;
-    private readonly ILogger<UrlsController> _logger;
-
-    public UrlsController(IUrlShortenerService service, ILogger<UrlsController> logger)
-    {
-        _service = service;
-        _logger = logger;
-    }
 
     // POST /shorten
     [HttpPost("shorten")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
     public async Task<IActionResult> Shorten([FromBody] ShortenUrlRequest request)
-    {        
-                            return Ok();
+    {
+        var baseUrl = GetBaseUrl();
+        var url = await service.ShortenAsync(request, baseUrl);
+        return new ObjectResult(url) { StatusCode = StatusCodes.Status201Created };
     }
 
     // GET /urls
@@ -29,7 +24,7 @@ public class UrlsController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var baseUrl = GetBaseUrl();
-        var urls = await _service.GetAllAsync(baseUrl);
+        var urls = await service.GetAllAsync(baseUrl);
         return Ok(urls);
     }
 
@@ -39,7 +34,7 @@ public class UrlsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RedirectToUrl(string alias)
     {
-        var fullUrl = await _service.GetFullUrlAsync(alias);
+        var fullUrl = await service.GetFullUrlAsync(alias);
         if (fullUrl is null)
             return NotFound(new { error = $"No URL found for alias '{alias}'." });
 
@@ -52,7 +47,7 @@ public class UrlsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(string alias)
     {
-        var deleted = await _service.DeleteAsync(alias);
+        var deleted = await service.DeleteAsync(alias);
         if (!deleted)
             return NotFound(new { error = $"No URL found for alias '{alias}'." });
 

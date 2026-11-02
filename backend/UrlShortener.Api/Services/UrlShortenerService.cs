@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Slugify;
 using UrlShortener.Api.Data;
 using UrlShortener.Api.Models;
 
@@ -16,7 +17,7 @@ public class UrlShortenerService : IUrlShortenerService
     public async Task<ShortenUrlResponse> ShortenAsync(ShortenUrlRequest request, string baseUrl)
     {
         var alias = string.IsNullOrWhiteSpace(request.CustomAlias)
-            ? GenerateAlias()
+            ? GenerateAlias(request.FullUrl)
             : request.CustomAlias.Trim();
 
         if (!IsThisThingValidOrNot(alias))
@@ -87,9 +88,19 @@ public class UrlShortenerService : IUrlShortenerService
 
     // --- Private helpers ---
 
-    private static string GenerateAlias()
+    private static string GenerateAlias(string fullUrl)
     {
-        return new string(""); // Placeholder for alias generation logic
+        // remove the protocol and slugify the fullUrl
+        var uri = new Uri(fullUrl);
+        var urlWithoutProtocol = uri.Host + uri.PathAndQuery;
+
+        var slug = new SlugHelper(
+            new SlugHelperConfiguration
+            {
+                StringReplacements = { { ".", "-"} }
+            })
+            .GenerateSlug(urlWithoutProtocol);
+        return slug;
     }
 
     private static bool IsThisThingValidOrNot(string alias)

@@ -64,7 +64,8 @@ public class UrlsControllerIntegrationTests : IClassFixture<WebApplicationFactor
             var errorContent = await response.Content.ReadAsStringAsync();
             throw new Exception($"Request failed with status code {response.StatusCode}: {errorContent}");
         }
-        //response.StatusCode.Should().Be(HttpStatusCode.Created);
+        
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
         var body = await response.Content.ReadFromJsonAsync<ShortenUrlResponse>();
         body!.ShortUrl.Should().Contain("/");
         body.FullUrl.Should().Be("https://example.com/some/path");
