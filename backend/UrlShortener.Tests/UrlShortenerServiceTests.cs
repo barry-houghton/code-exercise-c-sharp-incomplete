@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using UrlShortener.Api.Data;
+using UrlShortener.Api.Exceptions;
 using UrlShortener.Api.Models;
 using UrlShortener.Api.Services;
 using Xunit;
@@ -70,7 +71,7 @@ public class UrlShortenerServiceTests : IDisposable
         };
 
         await _sut.Invoking(s => s.ShortenAsync(secondRequest, BaseUrl))
-            .Should().ThrowAsync<InvalidOperationException>()
+            .Should().ThrowAsync<DuplicateAliasException>()
             .WithMessage("*duplicate*");
     }
 
@@ -88,7 +89,7 @@ public class UrlShortenerServiceTests : IDisposable
         };
 
         await _sut.Invoking(s => s.ShortenAsync(request, BaseUrl))
-            .Should().ThrowAsync<ArgumentException>();
+            .Should().ThrowAsync<InvalidAliasException>();
     }
 
     [Fact]

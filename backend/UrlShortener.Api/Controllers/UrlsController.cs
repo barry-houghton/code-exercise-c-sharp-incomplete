@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using UrlShortener.Api.Exceptions;
 using UrlShortener.Api.Models;
 using UrlShortener.Api.Services;
 
@@ -11,11 +12,20 @@ public class UrlsController(IUrlShortenerService service, ILogger<UrlsController
     // POST /shorten
     [HttpPost("shorten")]
     [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Shorten([FromBody] ShortenUrlRequest request)
     {
-        var baseUrl = GetBaseUrl();
-        var url = await service.ShortenAsync(request, baseUrl);
-        return new ObjectResult(url) { StatusCode = StatusCodes.Status201Created };
+        try
+        {
+            var baseUrl = GetBaseUrl();
+            var url = await service.ShortenAsync(request, baseUrl);
+            return new ObjectResult(url) { StatusCode = StatusCodes.Status201Created };
+        }
+        catch (DomainException ex)
+        {
+            logger.LogWarning("Domain exception captured: {Message}", ex.Message);
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     // GET /urls
