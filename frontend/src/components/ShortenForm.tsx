@@ -15,6 +15,20 @@ export function ShortenForm({ onSubmit, disabled }: ShortenFormProps) {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setValidationError(null);
+    const url = fullUrl.trim();
+    const alias = customAlias.trim();
+
+    if (!url) return setValidationError('URL is required.');
+    try {
+      const u = new URL(url);
+      if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error();
+    } catch {
+      return setValidationError('Please enter a valid URL (including http:// or https://).');
+    }
+    if (alias && !/^[a-zA-Z0-9-]{2,64}$/.test(alias)) {
+      return setValidationError('Alias may only contain letters, numbers, and hyphens (2–64 characters).');
+    }
+
     setSubmitting(true);
     try {
       await onSubmit(fullUrl.trim(), customAlias.trim() || undefined);

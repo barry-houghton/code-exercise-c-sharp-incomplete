@@ -1,6 +1,7 @@
 import { useUrlShortener } from './hooks/useUrlShortener';
 import { ShortenForm } from './components/ShortenForm';
 import { ResultBanner } from './components/ResultBanner';
+import { UrlTable } from './components/UrlTable';
 
 export default function App() {
   const { urls, loading, error, lastCreated, shorten, deleteUrl, clearLastCreated } =
@@ -43,13 +44,16 @@ export default function App() {
               <span className="badge">{urls.length}</span>
             )}
           </h2>
-
-         
+          {loading && urls.length === 0 ? (
+            <p className="empty-state">Loading…</p>
+          ) : (
+            <UrlTable urls={urls} onDelete={deleteUrl} />
+          )}
         </section>
       </main>
 
       <footer className="app-footer">
-        <p>Snip URL Shortener</p>
+        <p>Snip - URL Shortener</p>
       </footer>
     </div>
   );
