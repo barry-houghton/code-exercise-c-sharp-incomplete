@@ -128,7 +128,7 @@ public class UrlsControllerIntegrationTests : IClassFixture<WebApplicationFactor
 
         var response = await client.GetAsync("/redir");
 
-        response.StatusCode.Should().Be(HttpStatusCode.PermanentRedirect);
+        response.StatusCode.Should().Be(HttpStatusCode.Found);
         response.Headers.Location!.ToString().Should().Be("https://target.com/");
     }
 

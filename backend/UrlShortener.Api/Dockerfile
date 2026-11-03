@@ -11,7 +11,7 @@ RUN dotnet restore
 COPY . .
 
 RUN dotnet build -c Release --no-restore
-#RUN dotnet test -c Release --no-build --verbosity normal
+RUN dotnet test -c Release --no-build --verbosity normal
 RUN dotnet publish UrlShortener.Api/UrlShortener.Api.csproj -c Release -o /app/publish --no-build
 
 # Runtime stage
