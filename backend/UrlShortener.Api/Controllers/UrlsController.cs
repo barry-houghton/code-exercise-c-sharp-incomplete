@@ -30,11 +30,11 @@ public class UrlsController(IUrlShortenerService service, ILogger<UrlsController
 
     // GET /urls
     [HttpGet("urls")]
-    [ProducesResponseType(typeof(IEnumerable<UrlListItem>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(typeof(PagedResult<UrlListItem>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll([FromQuery] UrlListRequest request)
     {
         var baseUrl = GetBaseUrl();
-        var urls = await service.GetAllAsync(baseUrl);
+        var urls = await service.GetAllAsync(baseUrl, request.PageIndex, request.PageSize);
         return Ok(urls);
     }
 

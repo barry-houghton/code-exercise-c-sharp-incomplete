@@ -133,11 +133,11 @@ public class UrlShortenerServiceTests : IDisposable
         await _sut.ShortenAsync(new ShortenUrlRequest { FullUrl = "https://one.com", CustomAlias = "one" }, BaseUrl);
         await _sut.ShortenAsync(new ShortenUrlRequest { FullUrl = "https://two.com", CustomAlias = "two" }, BaseUrl);
 
-        var results = (await _sut.GetAllAsync(BaseUrl)).ToList();
+        var results = (await _sut.GetAllAsync(BaseUrl));
 
-        results.Should().HaveCount(2);
-        results.Should().Contain(r => r.Alias == "one");
-        results.Should().Contain(r => r.Alias == "two");
+        results.Items.Should().HaveCount(2);
+        results.Items.Should().Contain(r => r.Alias == "one");
+        results.Items.Should().Contain(r => r.Alias == "two");
     }
 
     [Fact]
@@ -145,9 +145,9 @@ public class UrlShortenerServiceTests : IDisposable
     {
         await _sut.ShortenAsync(new ShortenUrlRequest { FullUrl = "https://example.com", CustomAlias = "abc" }, BaseUrl);
 
-        var results = (await _sut.GetAllAsync(BaseUrl)).ToList();
+        var results = (await _sut.GetAllAsync(BaseUrl));
 
-        results.Single().ShortUrl.Should().Be($"{BaseUrl}/abc");
+        results.Items.Single().ShortUrl.Should().Be($"{BaseUrl}/abc");
     }
 
     [Fact]
@@ -155,7 +155,27 @@ public class UrlShortenerServiceTests : IDisposable
     {
         var results = await _sut.GetAllAsync(BaseUrl);
 
-        results.Should().BeEmpty();
+        results.Items.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData(1, 2, 10)]
+    [InlineData(3, 3, 7)]
+    [InlineData(10, 5, 7)]
+    public async Task GetAllAsync_WithValidPaging_ReturnsPagedUrls(int pageIndex, int pageSize, int totalCount)
+    {
+        var expectedRows = Math.Clamp(totalCount - (pageIndex - 1) * pageSize, 0, pageSize);
+        foreach (var i in Enumerable.Range(1, totalCount))
+        {
+            await _sut.ShortenAsync(new ShortenUrlRequest { FullUrl = $"https://{i}.com", CustomAlias = $"{i:000}" }, BaseUrl);
+        }
+
+        var results = await _sut.GetAllAsync(BaseUrl, pageIndex, pageSize);
+
+        results.Items.Should().HaveCount(expectedRows);
+        results.PageIndex.Should().Be(pageIndex);
+        results.PageSize.Should().Be(pageSize);
+        results.TotalCount.Should().Be(totalCount);
     }
 
     // --- DeleteAsync ---

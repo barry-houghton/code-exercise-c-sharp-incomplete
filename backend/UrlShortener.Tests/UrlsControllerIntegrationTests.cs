@@ -1,10 +1,11 @@
-using System.Net;
-using System.Net.Http.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System.Buffers.Text;
+using System.Net;
+using System.Net.Http.Json;
 using UrlShortener.Api.Data;
 using UrlShortener.Api.Models;
 using Xunit;
@@ -144,6 +145,42 @@ public class UrlsControllerIntegrationTests : IClassFixture<WebApplicationFactor
 
     // --- GET /urls ---
 
+    [Theory]
+    [InlineData(0, 10)]
+    [InlineData(99, 10)]
+    [InlineData(1, 0)]
+    [InlineData(1, 999)]
+    public async Task Get_Urls_InvalidPaging_Returns400(int pageIndex, int pageSize)
+    {
+        var client = CreateClient();
+
+        var response = await client.GetAsync($"/urls?pageIndex={pageIndex}&pageSize={pageSize}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Theory]
+    [InlineData(1, 2, 10)]
+    [InlineData(3, 3, 7)]
+    [InlineData(10, 5, 7)]
+    public async Task Get_Urls_ValidPaging_ReturnsPagedShortenedUrls(int pageIndex, int pageSize, int totalCount)
+    {
+        var expectedRows = Math.Clamp(totalCount - (pageIndex - 1) * pageSize, 0, pageSize);
+        var client = CreateClient();
+        foreach (var i in Enumerable.Range(1, totalCount))
+        {
+            await client.PostAsJsonAsync("/shorten", new { fullUrl = $"https://{i}.com", customAlias = $"{i:000}" });
+        }
+
+        var response = await client.GetAsync($"/urls?pageIndex={pageIndex}&pageSize={pageSize}");
+
+        var body = await response.Content.ReadFromJsonAsync<PagedResult<UrlListItem>>();
+        body!.Items.Should().HaveCount(expectedRows);
+        body.PageIndex.Should().Be(pageIndex);
+        body.PageSize.Should().Be(pageSize);
+        body.TotalCount.Should().Be(totalCount);
+    }
+
     [Fact]
     public async Task Get_Urls_ReturnsAllShortenedUrls()
     {
@@ -154,9 +191,9 @@ public class UrlsControllerIntegrationTests : IClassFixture<WebApplicationFactor
         var response = await client.GetAsync("/urls");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var body = await response.Content.ReadFromJsonAsync<List<UrlListItem>>();
-        body!.Should().Contain(u => u.Alias == "list-one");
-        body.Should().Contain(u => u.Alias == "list-two");
+        var body = await response.Content.ReadFromJsonAsync<PagedResult<UrlListItem>>();
+        body!.Items.Should().Contain(u => u.Alias == "list-one");
+        body.Items.Should().Contain(u => u.Alias == "list-two");
     }
 
     // --- DELETE /{alias} ---

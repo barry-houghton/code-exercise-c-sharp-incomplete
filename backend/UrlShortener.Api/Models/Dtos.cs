@@ -18,6 +18,14 @@ public class ShortenUrlResponse
     public required string FullUrl { get; set; }
 }
 
+public class UrlListRequest
+{
+    [Range(1, 10)]
+    public required int PageIndex { get; set; } = 1;
+    [Range(1, 100)]
+    public required int PageSize { get; set; } = 10;
+}
+
 public class UrlListItem
 {
     public required string Alias { get; set; }

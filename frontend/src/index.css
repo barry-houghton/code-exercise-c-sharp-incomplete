@@ -321,7 +321,7 @@ input:disabled { opacity: 0.6; cursor: not-allowed; }
 .short-url-link:hover { text-decoration: underline; }
 
 .full-url {
-  display: block;
+  display: block; /* on an inner span, not the td, so the cell stays a table-cell */
   max-width: 340px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -364,3 +364,39 @@ input:disabled { opacity: 0.6; cursor: not-allowed; }
   .result-banner__inner { flex-direction: column; align-items: flex-start; }
   .full-url { max-width: 200px; }
 }
+
+/* ── Pagination styling───────────────────────────── */
+.pagination {
+  display: flex;
+  justify-content: center;
+  padding-left: 0;
+  list-style: none;
+  margin-top: 20px;
+}
+
+.pagination li {
+  margin: 0 5px;
+}
+
+.pagination li a {
+  display: inline-block;
+  padding: 10px 15px;
+  background-color: white;
+  color: #007bff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.pagination li a:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+.pagination li.active a {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+

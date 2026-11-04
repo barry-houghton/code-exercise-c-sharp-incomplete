@@ -54,9 +54,10 @@ public class UrlShortenerService : IUrlShortenerService
         return entry?.FullUrl;
     }
 
-    public async Task<IEnumerable<UrlListItem>> GetAllAsync(string baseUrl)
+    public async Task<PagedResult<UrlListItem>> GetAllAsync(string baseUrl, int pageIndex = 1, int pageSize = 10)
     {
-        return await _db.ShortenedUrls
+        // order the shortened urls and project
+        var snips = _db.ShortenedUrls
             .AsNoTracking()
             .OrderByDescending(u => u.CreatedAt)
             .Select(u => new UrlListItem
@@ -64,8 +65,24 @@ public class UrlShortenerService : IUrlShortenerService
                 Alias = u.Alias,
                 FullUrl = u.FullUrl,
                 ShortUrl = $"{baseUrl}/{u.Alias}"
-            })
+            });
+
+        // get the total shortened url count
+        var totalSnips = await snips.CountAsync();
+
+        // page the shortened urls
+        var pagedSnips = await snips
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+
+        return new PagedResult<UrlListItem>
+        {
+            Items = pagedSnips,
+            PageIndex = pageIndex,
+            PageSize = pageSize,
+            TotalCount = totalSnips
+        };
     }
 
     public async Task<bool> DeleteAsync(string alias)
