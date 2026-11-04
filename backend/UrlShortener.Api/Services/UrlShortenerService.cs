@@ -92,12 +92,12 @@ public class UrlShortenerService : IUrlShortenerService
         if (!Uri.TryCreate(fullUrl, UriKind.Absolute, out var uri))
             throw new InvalidUrlException("The URL is invalid.");
 
-        var urlWithoutProtocol = uri.Host + uri.PathAndQuery;
+        var urlWithoutProtocol = uri.Host + uri.PathAndQuery.Trim('/');
 
         var slug = new SlugHelper(
             new SlugHelperConfiguration
             {
-                StringReplacements = { { ".", "-"} },
+                StringReplacements = { { ".", "-"}, { "/", "-" } },
                 MaximumLength = 64,
             })
             .GenerateSlug(urlWithoutProtocol);

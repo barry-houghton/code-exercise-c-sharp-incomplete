@@ -1,0 +1,4 @@
+services:
+  urlshortener.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
