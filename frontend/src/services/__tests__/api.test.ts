@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { api } from '../api';
+import { SortDirection } from '../../types/api';
 
 describe('api service', () => {
   beforeEach(() => {
@@ -35,16 +36,37 @@ describe('api service', () => {
       .rejects.toThrow('Alias already taken.');
   });
 
-  it('listAll sends GET to /urls', async () => {
+  it('listAll sends GET to /urls with 1-based page index, page size and sort order', async () => {
+    const mockResponse = { items: [], pageIndex: 1, pageSize: 5, totalCount: 0 };
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => [],
+      json: async () => mockResponse,
     } as Response);
 
-    await api.listAll();
+    // the UI is 0-based, the API is 1-based
+    const result = await api.listAll(0, 5, SortDirection.desc);
 
-    expect(fetch).toHaveBeenCalledWith('/urls');
+    expect(fetch).toHaveBeenCalledWith(
+      '/urls?pageIndex=1&pageSize=5&sortOrder=0',
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result).toEqual(mockResponse);
+  });
+
+  it('listAll sends the ascending sort order', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ items: [], pageIndex: 3, pageSize: 10, totalCount: 0 }),
+    } as Response);
+
+    await api.listAll(2, 10, SortDirection.asc);
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/urls?pageIndex=3&pageSize=10&sortOrder=1',
+      expect.objectContaining({ method: 'GET' }),
+    );
   });
 
   it('delete sends DELETE to /{alias}', async () => {
