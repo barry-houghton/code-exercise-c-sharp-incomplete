@@ -145,6 +145,21 @@ public class UrlsControllerIntegrationTests : IClassFixture<WebApplicationFactor
 
     // --- GET /urls ---
 
+    [Fact]
+    public async Task Get_Urls_ReturnsAllShortenedUrls()
+    {
+        var client = CreateClient();
+        await client.PostAsJsonAsync("/shorten", new { fullUrl = "https://one.com", customAlias = "list-one" });
+        await client.PostAsJsonAsync("/shorten", new { fullUrl = "https://two.com", customAlias = "list-two" });
+
+        var response = await client.GetAsync("/urls");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<PagedResult<UrlListItem>>();
+        body!.Items.Should().Contain(u => u.Alias == "list-one");
+        body.Items.Should().Contain(u => u.Alias == "list-two");
+    }
+
     [Theory]
     [InlineData(0, 10)]
     [InlineData(99, 10)]
@@ -179,21 +194,6 @@ public class UrlsControllerIntegrationTests : IClassFixture<WebApplicationFactor
         body.PageIndex.Should().Be(pageIndex);
         body.PageSize.Should().Be(pageSize);
         body.TotalCount.Should().Be(totalCount);
-    }
-
-    [Fact]
-    public async Task Get_Urls_ReturnsAllShortenedUrls()
-    {
-        var client = CreateClient();
-        await client.PostAsJsonAsync("/shorten", new { fullUrl = "https://one.com", customAlias = "list-one" });
-        await client.PostAsJsonAsync("/shorten", new { fullUrl = "https://two.com", customAlias = "list-two" });
-
-        var response = await client.GetAsync("/urls");
-
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var body = await response.Content.ReadFromJsonAsync<PagedResult<UrlListItem>>();
-        body!.Items.Should().Contain(u => u.Alias == "list-one");
-        body.Items.Should().Contain(u => u.Alias == "list-two");
     }
 
     // --- DELETE /{alias} ---

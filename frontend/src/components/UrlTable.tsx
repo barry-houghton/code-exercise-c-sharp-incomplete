@@ -25,6 +25,7 @@ export function UrlTable({ urls, currentPage, pageCount, onDelete, onPageChange 
           <tr>
             <th>Short URL</th>
             <th>Original URL</th>
+            <th>Created</th>
             <th><span className="sr-only">Actions</span></th>
           </tr>
         </thead>
@@ -38,6 +39,11 @@ export function UrlTable({ urls, currentPage, pageCount, onDelete, onPageChange 
               </td>
               <td>
                 <span className="full-url" title={u.fullUrl}>{u.fullUrl}</span>
+              </td>
+              <td>
+                <span className="created-at" title={new Date(u.createdAt).toLocaleString()}>
+                  {new Date(u.createdAt).toLocaleDateString()}
+                </span>
               </td>
               <td>
                 <button className="btn-danger" onClick={() => onDelete(u.alias)} aria-label={`Delete ${u.alias}`}>

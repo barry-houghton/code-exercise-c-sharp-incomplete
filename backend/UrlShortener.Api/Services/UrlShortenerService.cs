@@ -9,10 +9,12 @@ namespace UrlShortener.Api.Services;
 public class UrlShortenerService : IUrlShortenerService
 {
     private readonly AppDbContext _db;
+    private readonly IDateTimeHelper _dateTimeHelper;
 
-    public UrlShortenerService(AppDbContext db)
+    public UrlShortenerService(AppDbContext db, IDateTimeHelper dateTimeHelper)
     {
         _db = db;
+        _dateTimeHelper = dateTimeHelper;
     }
 
     public async Task<ShortenUrlResponse> ShortenAsync(ShortenUrlRequest request, string baseUrl)
@@ -31,7 +33,8 @@ public class UrlShortenerService : IUrlShortenerService
         var entry = new ShortenedUrl
         {
             Alias = alias,
-            FullUrl = request.FullUrl
+            FullUrl = request.FullUrl,
+            CreatedAt = _dateTimeHelper.GetUtcNow(),
         };
 
         _db.ShortenedUrls.Add(entry);
@@ -54,24 +57,34 @@ public class UrlShortenerService : IUrlShortenerService
         return entry?.FullUrl;
     }
 
-    public async Task<PagedResult<UrlListItem>> GetAllAsync(string baseUrl, int pageIndex = 1, int pageSize = 10)
+    public async Task<PagedResult<UrlListItem>> GetAllAsync(string baseUrl, int pageIndex = 1, int pageSize = 10, SortOrder sortOrder = SortOrder.CreatedByDesc)
     {
         // order the shortened urls and project
         var snips = _db.ShortenedUrls
             .AsNoTracking()
-            .OrderByDescending(u => u.CreatedAt)
             .Select(u => new UrlListItem
             {
                 Alias = u.Alias,
                 FullUrl = u.FullUrl,
-                ShortUrl = $"{baseUrl}/{u.Alias}"
+                ShortUrl = $"{baseUrl}/{u.Alias}",
+                CreatedAt = u.CreatedAt
             });
 
+        IOrderedQueryable<UrlListItem> orderedSnips;
+        if (sortOrder == SortOrder.CreatedByDesc)
+        {
+            orderedSnips = snips.OrderByDescending(u => u.CreatedAt);
+        }
+        else
+        {
+            orderedSnips = snips.OrderBy(u => u.CreatedAt);
+        }
+
         // get the total shortened url count
-        var totalSnips = await snips.CountAsync();
+        var totalSnips = await orderedSnips.CountAsync();
 
         // page the shortened urls
-        var pagedSnips = await snips
+        var pagedSnips = await orderedSnips
             .Skip((pageIndex - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

@@ -18,12 +18,20 @@ public class ShortenUrlResponse
     public required string FullUrl { get; set; }
 }
 
+public enum SortOrder
+{
+    CreatedByDesc,
+    CreatedByAsc
+}
+
 public class UrlListRequest
 {
     [Range(1, 10)]
     public required int PageIndex { get; set; } = 1;
     [Range(1, 100)]
     public required int PageSize { get; set; } = 10;
+    [EnumDataType(typeof(SortOrder))]
+    public required SortOrder SortOrder { get; set; }
 }
 
 public class UrlListItem
@@ -31,4 +39,5 @@ public class UrlListItem
     public required string Alias { get; set; }
     public required string FullUrl { get; set; }
     public required string ShortUrl { get; set; }
+    public required DateTime CreatedAt { get; set; }
 }

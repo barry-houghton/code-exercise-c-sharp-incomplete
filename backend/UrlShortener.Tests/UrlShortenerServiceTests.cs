@@ -1,9 +1,11 @@
 using FluentAssertions;
+using FluentAssertions.Extensions;
 using Microsoft.EntityFrameworkCore;
 using UrlShortener.Api.Data;
 using UrlShortener.Api.Exceptions;
 using UrlShortener.Api.Models;
 using UrlShortener.Api.Services;
+using UrlShortener.Tests.Mocks;
 using Xunit;
 
 namespace UrlShortener.Tests;
@@ -12,6 +14,7 @@ public class UrlShortenerServiceTests : IDisposable
 {
     private readonly AppDbContext _db;
     private readonly UrlShortenerService _sut;
+    private readonly MockDateTimeHelper _mockDateTimeHelper;
     private const string BaseUrl = "http://localhost:8080";
 
     public UrlShortenerServiceTests()
@@ -20,7 +23,8 @@ public class UrlShortenerServiceTests : IDisposable
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _db = new AppDbContext(options);
-        _sut = new UrlShortenerService(_db);
+        _mockDateTimeHelper = new MockDateTimeHelper();
+        _sut = new UrlShortenerService(_db, _mockDateTimeHelper.Object);
     }
 
     public void Dispose() => _db.Dispose();
@@ -176,6 +180,27 @@ public class UrlShortenerServiceTests : IDisposable
         results.PageIndex.Should().Be(pageIndex);
         results.PageSize.Should().Be(pageSize);
         results.TotalCount.Should().Be(totalCount);
+    }
+
+    [Theory]
+    [InlineData(SortOrder.CreatedByDesc)]
+    [InlineData(SortOrder.CreatedByAsc)]
+    public async Task GetAllAsync_WithValidSortOrder_ReturnsPagedUrls(SortOrder sortOrder)
+    {
+        var totalCount = 10;
+        var firstCreatedBy = _mockDateTimeHelper.Object.GetUtcNow();
+        var lastCreatedBy = DateTime.UtcNow;
+        foreach (var i in Enumerable.Range(1, totalCount))
+        {
+            lastCreatedBy = _mockDateTimeHelper.Object.GetUtcNow();
+            await _sut.ShortenAsync(new ShortenUrlRequest { FullUrl = $"https://{i}.com", CustomAlias = $"{i:000}" }, BaseUrl);
+            _mockDateTimeHelper.AdvanceTimeBy(TimeSpan.FromMinutes(i - 1));
+        }
+
+        var results = await _sut.GetAllAsync(BaseUrl, pageIndex: 1, pageSize: totalCount, sortOrder: sortOrder);
+
+        results.Items.First().CreatedAt.Should().BeCloseTo(sortOrder == SortOrder.CreatedByDesc ? lastCreatedBy : firstCreatedBy, 500.Milliseconds());
+        results.Items.Last().CreatedAt.Should().BeCloseTo(sortOrder == SortOrder.CreatedByDesc ? firstCreatedBy : lastCreatedBy, 500.Milliseconds());
     }
 
     // --- DeleteAsync ---

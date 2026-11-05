@@ -2,9 +2,10 @@ import { useUrlShortener } from './hooks/useUrlShortener';
 import { ShortenForm } from './components/ShortenForm';
 import { ResultBanner } from './components/ResultBanner';
 import { UrlTable } from './components/UrlTable';
+import { SortSelect } from './components/SortSelect';
 
 export default function App() {
-  const { urls, currentPage, pageCount, loading, error, lastCreated, shorten, deleteUrl, changePage, clearLastCreated } =
+  const { urls, currentPage, pageCount, sortDirection, loading, error, lastCreated, shorten, deleteUrl, changePage, changeSortDirection,clearLastCreated } =
     useUrlShortener();
 
   return (
@@ -37,13 +38,16 @@ export default function App() {
           </div>
         )}
 
-        <section className="card" aria-labelledby="list-heading">
-          <h2 id="list-heading" className="card__title">
-            All shortened URLs
-            {urls.length > 0 && (
-              <span className="badge">{urls.length}</span>
-            )}
-          </h2>
+        <section className="card " aria-labelledby="list-heading">
+          <div className="card__header">
+            <h2 id="list-heading" className="card__title">
+              All shortened URLs
+              {urls.length > 0 && (
+                <span className="badge">{urls.length}</span>
+              )}
+            </h2>
+            {urls.length > 0 && <SortSelect value={sortDirection} onChange={changeSortDirection} />}
+          </div>
           {loading && urls.length === 0 ? (
             <p className="empty-state">Loading…</p>
           ) : (

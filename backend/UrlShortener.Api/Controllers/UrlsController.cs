@@ -34,7 +34,7 @@ public class UrlsController(IUrlShortenerService service, ILogger<UrlsController
     public async Task<IActionResult> GetAll([FromQuery] UrlListRequest request)
     {
         var baseUrl = GetBaseUrl();
-        var urls = await service.GetAllAsync(baseUrl, request.PageIndex, request.PageSize);
+        var urls = await service.GetAllAsync(baseUrl, request.PageIndex, request.PageSize, request.SortOrder);
         return Ok(urls);
     }
 

@@ -18,6 +18,7 @@ var dbPath = builder.Configuration["DatabasePath"] ?? "urlshortener.db";
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 
+builder.Services.AddScoped<IDateTimeHelper, DateTimeHelper>();
 builder.Services.AddScoped<IUrlShortenerService, UrlShortenerService>();
 
 // CORS – allow the React dev server and any configured frontend origin

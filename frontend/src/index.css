@@ -91,8 +91,15 @@ body {
   padding: 28px;
   box-shadow: var(--shadow-card);
 }
+.card__header {
+  display: flex;
+  align-items: center;       /* vertically centres the select against the title */
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;       /* moved here from .card__title */
+}
 .card__title {
-  margin: 0 0 20px;
+  margin: 0;                 /* was: 0 0 20px */
   font-size: 16px;
   font-weight: 600;
   color: var(--ink);
@@ -100,6 +107,7 @@ body {
   align-items: center;
   gap: 10px;
 }
+.card__header .card__title { margin: 0; }
 .badge {
   display: inline-flex;
   align-items: center;
@@ -310,6 +318,11 @@ input:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 .url-table tbody tr:last-child td { border-bottom: none; }
 .url-table tbody tr:hover { background: var(--surface); }
+.url-table th.col-created,
+.url-table td.col-created {
+  width: 1%;            /* shrink-to-fit: column is only as wide as its content */
+  white-space: nowrap;
+}
 
 .short-url-link {
   font-family: var(--font-mono);
@@ -329,6 +342,16 @@ input:disabled { opacity: 0.6; cursor: not-allowed; }
   color: var(--ink-muted);
   font-size: 13px;
 }
+
+.created-at {
+  display: block;
+  /* min-width: 75px; */
+  white-space: nowrap;
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums; /* digits line up down the column */
+}
+
 .actions-cell { text-align: right; width: 80px; }
 
 /* ── Empty state ─────────────────────────────────── */
@@ -398,5 +421,47 @@ input:disabled { opacity: 0.6; cursor: not-allowed; }
   background-color: #007bff;
   color: white;
   border-color: #007bff;
+}
+
+/* ── Sort select ─────────────────────────────────── */
+.sort-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.sort-select__label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);        /* same look as the table headers */
+}
+
+.sort-select select {
+  appearance: none;               /* drop the native arrow so we can style it */
+  padding: 6px 28px 6px 10px;     /* extra right padding makes room for the arrow */
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+  background-color: var(--surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%239a9a9a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.sort-select select:hover { border-color: var(--ink-faint); }
+
+.sort-select select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);   /* same ring as input:focus */
 }
 
